@@ -395,14 +395,14 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 pcregrep: Error -8, -21 or -27 means that a resource limit was exceeded.
 pcregrep: Check your regex for nested unlimited loops.
 ---------------------------- Test 38 ------------------------------
-This line contains a binary zero here > < for testing.
+This line contains a binary zero here >\00< for testing.
 RC=0
 ---------------------------- Test 39 ------------------------------
 This is a line before the binary zero.
-This line contains a binary zero here > < for testing.
+This line contains a binary zero here >\00< for testing.
 RC=0
 ---------------------------- Test 40 ------------------------------
-This line contains a binary zero here > < for testing.
+This line contains a binary zero here >\00< for testing.
 This is a line after the binary zero.
 RC=0
 ---------------------------- Test 41 ------------------------------
@@ -662,13 +662,13 @@ RC=1
 ---------------------------- Test 90 -----------------------------
 RC=1
 ---------------------------- Test 91 -----------------------------
-The quick brown f x jumps over the lazy dog.
+The quick brown f\00x jumps over the lazy dog.
 RC=0
 ---------------------------- Test 92 -----------------------------
-The quick brown f x jumps over the lazy dog.
+The quick brown f\00x jumps over the lazy dog.
 RC=0
 ---------------------------- Test 93 -----------------------------
-The quick brown f x jumps over the lazy dog.
+The quick brown f\00x jumps over the lazy dog.
 RC=0
 ---------------------------- Test 94 -----------------------------
 ./testdata/grepinput8
@@ -742,4 +742,16 @@ RC=0
 RC=0
 ---------------------------- Test 106 -----------------------------
 a
+RC=0
+---------------------------- Test 107 -----------------------------
+1:0,1
+2:0,1
+2:1,1
+2:2,1
+2:3,1
+2:4,1
+RC=0
+---------------------------- Test 108 ------------------------------
+RC=0
+---------------------------- Test 109 -----------------------------
 RC=0
