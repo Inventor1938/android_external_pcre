@@ -984,7 +984,7 @@ other. NOTE: The values also appear in pcre_jit_compile.c. */
 #ifndef EBCDIC
 
 #define HSPACE_LIST \
-  CHAR_HT, CHAR_SPACE, CHAR_NBSP, \
+  CHAR_HT, CHAR_SPACE, 0xa0, \
   0x1680, 0x180e, 0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, \
   0x2006, 0x2007, 0x2008, 0x2009, 0x200A, 0x202f, 0x205f, 0x3000, \
   NOTACHAR
@@ -1010,7 +1010,7 @@ other. NOTE: The values also appear in pcre_jit_compile.c. */
 #define HSPACE_BYTE_CASES \
   case CHAR_HT: \
   case CHAR_SPACE: \
-  case CHAR_NBSP
+  case 0xa0     /* NBSP */
 
 #define HSPACE_CASES \
   HSPACE_BYTE_CASES: \
@@ -1037,12 +1037,11 @@ other. NOTE: The values also appear in pcre_jit_compile.c. */
 /* ------ EBCDIC environments ------ */
 
 #else
-#define HSPACE_LIST CHAR_HT, CHAR_SPACE, CHAR_NBSP, NOTACHAR
+#define HSPACE_LIST CHAR_HT, CHAR_SPACE
 
 #define HSPACE_BYTE_CASES \
   case CHAR_HT: \
-  case CHAR_SPACE: \
-  case CHAR_NBSP
+  case CHAR_SPACE
 
 #define HSPACE_CASES HSPACE_BYTE_CASES
 
@@ -1216,7 +1215,6 @@ same code point. */
 
 #define CHAR_ESC                    '\047'
 #define CHAR_DEL                    '\007'
-#define CHAR_NBSP                   '\x41'
 #define STR_ESC                     "\047"
 #define STR_DEL                     "\007"
 
@@ -1231,7 +1229,6 @@ a positive value. */
 #define CHAR_NEL                    ((unsigned char)'\x85')
 #define CHAR_ESC                    '\033'
 #define CHAR_DEL                    '\177'
-#define CHAR_NBSP                   ((unsigned char)'\xa0')
 
 #define STR_LF                      "\n"
 #define STR_NL                      STR_LF
@@ -1609,7 +1606,6 @@ only. */
 #define CHAR_VERTICAL_LINE          '\174'
 #define CHAR_RIGHT_CURLY_BRACKET    '\175'
 #define CHAR_TILDE                  '\176'
-#define CHAR_NBSP                   ((unsigned char)'\xa0')
 
 #define STR_HT                      "\011"
 #define STR_VT                      "\013"
@@ -1765,10 +1761,6 @@ only. */
 #endif  /* SUPPORT_UTF */
 
 /* Escape items that are just an encoding of a particular data value. */
-
-#ifndef ESC_a
-#define ESC_a CHAR_BEL
-#endif
 
 #ifndef ESC_e
 #define ESC_e CHAR_ESC
@@ -2454,8 +2446,6 @@ typedef struct compile_data {
   BOOL had_pruneorskip;             /* (*PRUNE) or (*SKIP) encountered */
   BOOL check_lookbehind;            /* Lookbehinds need later checking */
   BOOL dupnames;                    /* Duplicate names exist */
-  BOOL dupgroups;                   /* Duplicate groups exist: (?| found */
-  BOOL iscondassert;                /* Next assert is a condition */
   int  nltype;                      /* Newline type */
   int  nllen;                       /* Newline string length */
   pcre_uchar nl[4];                 /* Newline string when fixed length */

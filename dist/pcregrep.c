@@ -1689,13 +1689,9 @@ while (ptr < endptr)
 
     if (filenames == FN_NOMATCH_ONLY) return 1;
 
-    /* If all we want is a yes/no answer, stop now. */
-
-    if (quiet) return 0;
-
     /* Just count if just counting is wanted. */
 
-    else if (count_only) count++;
+    if (count_only) count++;
 
     /* When handling a binary file and binary-files==binary, the "binary"
     variable will be set true (it's false in all other cases). In this
@@ -1715,6 +1711,10 @@ while (ptr < endptr)
       fprintf(stdout, "%s\n", printname);
       return 0;
       }
+
+    /* Likewise, if all we want is a yes/no answer. */
+
+    else if (quiet) return 0;
 
     /* The --only-matching option prints just the substring that matched,
     and/or one or more captured portions of it, as long as these strings are
@@ -2054,7 +2054,7 @@ if (filenames == FN_NOMATCH_ONLY)
 
 /* Print the match count if wanted */
 
-if (count_only && !quiet)
+if (count_only)
   {
   if (count > 0 || !omit_zero_count)
     {

@@ -70,8 +70,7 @@ Arguments:
   code            pointer to start of group (the bracket)
   startcode       pointer to start of the whole pattern's code
   options         the compiling options
-  recurses        chain of recurse_check to catch mutual recursion
-  countptr        pointer to call count (to catch over complexity)
+  int             RECURSE depth
 
 Returns:   the minimum length
            -1 if \C in UTF-8 mode or (*ACCEPT) was encountered
@@ -81,8 +80,7 @@ Returns:   the minimum length
 
 static int
 find_minlength(const REAL_PCRE *re, const pcre_uchar *code,
-  const pcre_uchar *startcode, int options, recurse_check *recurses,
-  int *countptr)
+  const pcre_uchar *startcode, int options, int recurse_depth)
 {
 int length = -1;
 /* PCRE_UTF16 has the same value as PCRE_UTF8. */
@@ -90,8 +88,6 @@ BOOL utf = (options & PCRE_UTF8) != 0;
 BOOL had_recurse = FALSE;
 register int branchlength = 0;
 register pcre_uchar *cc = (pcre_uchar *)code + 1 + LINK_SIZE;
-
-if ((*countptr)++ > 1000) return -1;   /* too complex */
 
 if (*code == OP_CBRA || *code == OP_SCBRA ||
     *code == OP_CBRAPOS || *code == OP_SCBRAPOS) cc += IMM2_SIZE;
@@ -134,7 +130,7 @@ for (;;)
     case OP_SBRAPOS:
     case OP_ONCE:
     case OP_ONCE_NC:
-    d = find_minlength(re, cc, startcode, options, recurses, countptr);
+    d = find_minlength(re, cc, startcode, options, recurse_depth);
     if (d < 0) return d;
     branchlength += d;
     do cc += GET(cc, 1); while (*cc == OP_ALT);
@@ -405,23 +401,8 @@ for (;;)
           }
         else
           {
-          recurse_check *r = recurses;
-          for (r = recurses; r != NULL; r = r->prev) if (r->group == cs) break;
-          if (r != NULL)           /* Mutual recursion */
-            {
-            d = 0;
-            had_recurse = TRUE;
-            break;
-            }
-          else
-            {
-            int dd;
-            this_recurse.prev = recurses;
-            this_recurse.group = cs;
-            dd = find_minlength(re, cs, startcode, options, &this_recurse,
-              countptr);
-            if (dd < d) d = dd;
-            }
+          int dd = find_minlength(re, cs, startcode, options, recurse_depth);
+          if (dd < d) d = dd;
           }
         slot += re->name_entry_size;
         }
@@ -444,20 +425,7 @@ for (;;)
         }
       else
         {
-        recurse_check *r = recurses;
-        for (r = recurses; r != NULL; r = r->prev) if (r->group == cs) break;
-        if (r != NULL)           /* Mutual recursion */
-          {
-          d = 0;
-          had_recurse = TRUE;
-          }
-        else
-          {
-          this_recurse.prev = recurses;
-          this_recurse.group = cs;
-          d = find_minlength(re, cs, startcode, options, &this_recurse,
-            countptr);
-          }
+        d = find_minlength(re, cs, startcode, options, recurse_depth);
         }
       }
     else d = 0;
@@ -510,17 +478,8 @@ for (;;)
       had_recurse = TRUE;
     else
       {
-      recurse_check *r = recurses;
-      for (r = recurses; r != NULL; r = r->prev) if (r->group == cs) break;
-      if (r != NULL)           /* Mutual recursion */
-        had_recurse = TRUE;
-      else
-        {
-        this_recurse.prev = recurses;
-        this_recurse.group = cs;
-        branchlength += find_minlength(re, cs, startcode, options,
-          &this_recurse, countptr);
-        }
+      branchlength += find_minlength(re, cs, startcode, options,
+        recurse_depth + 1);
       }
     cc += 1 + LINK_SIZE;
     break;
@@ -1458,7 +1417,6 @@ pcre32_study(const pcre32 *external_re, int options, const char **errorptr)
 #endif
 {
 int min;
-int count = 0;
 BOOL bits_set = FALSE;
 pcre_uint8 start_bits[32];
 PUBL(extra) *extra = NULL;
@@ -1545,7 +1503,7 @@ if ((re->options & PCRE_ANCHORED) == 0 &&
 
 /* Find the minimum length of subject string. */
 
-switch(min = find_minlength(re, code, code, re->options, NULL, &count))
+switch(min = find_minlength(re, code, code, re->options, 0))
   {
   case -2: *errorptr = "internal error: missing capturing bracket"; return NULL;
   case -3: *errorptr = "internal error: opcode not recognized"; return NULL;
